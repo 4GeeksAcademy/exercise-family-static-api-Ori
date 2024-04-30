@@ -21,6 +21,7 @@ def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
+
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
@@ -30,13 +31,47 @@ def handle_hello():
 
     # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
-    }
+    response_body = jsonify(members)
+    
+    return response_body, 200
+
+@app.route('/member', methods=['POST'])
+def add_member():
+    new_member = request.json
+    jackson_family.add_member(new_member)
+    return jsonify({"done": "usuario creado"}), 200
 
 
-    return jsonify(response_body), 200
+@app.route('/member/<int:member_id>', methods=['DELETE'])
+def delete_family_member(member_id):
+
+    delete_member_family = jackson_family.delete_member(member_id)
+
+    if not delete_member_family:
+        return jsonify({"msg":"Familiar no encontrado"}), 400
+    
+    return jsonify({"done": delete_member_family}) , 200
+
+
+@app.route('/member/<int:member_id>', methods=['PUT'])
+def update_family_member(member_id):
+     print("Actualizando", member_id)
+     new_member = request.json
+
+     update_member = jackson_family.update_member(member_id, new_member)
+     if not update_member:
+         return jsonify({"msg":"No se encontro al miembro"}), 400
+     return jsonify({"done":"Miembro modificado"}), 200
+           
+@app.route('/member/<int:member_id>', methods=['GET'])
+def get_one_member(member_id):
+
+    one_member_family = jackson_family.get_member(member_id)
+    if not one_member_family:
+        return jsonify({"msg": "Familiar no encontrado"}), 400
+    return jsonify(one_member_family),200
+
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
